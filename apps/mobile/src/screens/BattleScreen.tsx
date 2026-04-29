@@ -1,4 +1,4 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming } from 'react-native-reanimated';
 import { useEffect } from 'react';
 import { AnswerGrid } from '../components/AnswerGrid';
@@ -7,6 +7,7 @@ import { InventoryPanel } from '../components/InventoryPanel';
 import { QuestionCard } from '../components/QuestionCard';
 import { StatusBars } from '../components/StatusBars';
 import { enemiesByLevelId, getProfessorMessage } from '@reino/game-content';
+import { professorSpritesByKey, type SpriteSheetKey } from '@reino/assets';
 import type { useGameController } from '../hooks/useGameController';
 import { colors, spacing } from '../theme/tokens';
 
@@ -27,6 +28,7 @@ export function BattleScreen({ game }: BattleScreenProps) {
     property: game.level.property,
     playerHp: game.state.playerHp,
   });
+  const professorSprite = professorSpritesByKey.guide;
   const translateX = useSharedValue(0);
   const professorOpacity = useSharedValue(1);
   const professorTranslateY = useSharedValue(0);
@@ -81,8 +83,24 @@ export function BattleScreen({ game }: BattleScreenProps) {
         <AnswerGrid options={question.options} onAnswer={game.actions.answer} />
         <Text style={styles.feedback}>{game.state.lastEvents.at(-1)?.type.replaceAll('_', ' ')}</Text>
         <Animated.View style={[styles.professorReaction, game.state.combo >= 3 ? styles.professorCombo : null, professorAnimatedStyle]} key={`${professorMessage.text}-${game.state.lastEvents.at(-1)?.type ?? 'idle'}`}>
-          <Text style={styles.professorTitle}>👨‍🏫 Professor</Text>
-          <Text style={styles.professorText}>{professorMessage.text}</Text>
+          <View style={styles.professorAvatar} accessibilityLabel={professorSprite.label}>
+            <Image
+              source={mobileSpriteSheets[professorSprite.sheetKey]}
+              style={{
+                width: professorSprite.sheetWidth * 3,
+                height: professorSprite.sheetHeight * 3,
+                transform: [
+                  { translateX: -professorSprite.x * 3 },
+                  { translateY: -professorSprite.y * 3 },
+                ],
+              }}
+              resizeMode="stretch"
+            />
+          </View>
+          <View style={styles.professorCopy}>
+            <Text style={styles.professorTitle}>Professor</Text>
+            <Text style={styles.professorText}>{professorMessage.text}</Text>
+          </View>
         </Animated.View>
         <InventoryPanel state={game.state} actions={game.actions} />
       </Animated.View>
@@ -95,6 +113,15 @@ function missionGainStyle(progress: number) {
   if (progress >= 0.6) return styles.missionGainWarm;
   return styles.missionGainCool;
 }
+
+const mobileSpriteSheets: Record<SpriteSheetKey, ReturnType<typeof require>> = {
+  roguelike: require('../../assets/sprites/kenney-roguelike.png'),
+  characters: require('../../assets/sprites/kenney-roguelike-characters.png'),
+  dungeon: require('../../assets/sprites/kenney-roguelike-dungeon.png'),
+  tinyDungeon: require('../../assets/sprites/kenney-tiny-dungeon.png'),
+  micro: require('../../assets/sprites/kenney-micro-roguelike.png'),
+  uiRpg: require('../../assets/sprites/kenney-ui-rpg.png'),
+};
 
 
 const styles = StyleSheet.create({
@@ -110,7 +137,9 @@ const styles = StyleSheet.create({
   missionGainWarm: { backgroundColor: colors.warning },
   missionGainGold: { backgroundColor: '#ffb300' },
   feedback: { minHeight: 24, color: colors.secondary, textAlign: 'center', fontWeight: '800' },
-  professorReaction: { gap: 4, padding: spacing.md, borderRadius: 12, borderLeftWidth: 4, borderLeftColor: colors.secondary, backgroundColor: 'rgba(3,218,198,0.08)' },
+  professorReaction: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.md, borderRadius: 12, borderLeftWidth: 4, borderLeftColor: colors.secondary, backgroundColor: 'rgba(3,218,198,0.08)' },
+  professorAvatar: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)', backgroundColor: 'rgba(0,0,0,0.24)' },
+  professorCopy: { flex: 1, gap: 4 },
   professorCombo: { borderLeftColor: colors.accent, backgroundColor: 'rgba(255,0,255,0.08)' },
   professorTitle: { color: colors.text, fontWeight: '900' },
   professorText: { color: colors.text, lineHeight: 20 },

@@ -11,17 +11,28 @@ export function MainMenuScreen({
 }: MainMenuScreenProps) {
   return (
     <div id="main-menu">
+      <span className="menu-kicker">Aventura matemática</span>
       <h1 className="game-title">REINO DOS EXPOENTES</h1>
       <p className="menu-subtitle">Domine as propriedades, conquiste o reino.</p>
       <div className="progress-card">
         Progresso salvo: fase {highestUnlockedLevelIndex + 1} desbloqueada
       </div>
-      <div className="menu-guide">
-        <p>
-          📘 <b>Básico:</b> Produto e Divisão (Combate Inicial)<br />
-          📗 <b>Intermediário:</b> Potência de Potência e Zero (Combos Ativos)<br />
-          📕 <b>Avançado:</b> Negativos e Expressões (Pressão de Tempo!)
-        </p>
+      <div className="learning-path" aria-label="Trilha de aprendizado">
+        <div className="path-item">
+          <span className="path-marker path-basic" />
+          <strong>Básico</strong>
+          <span>Produto e divisão no combate inicial</span>
+        </div>
+        <div className="path-item">
+          <span className="path-marker path-intermediate" />
+          <strong>Intermediário</strong>
+          <span>Potência de potência e expoente zero</span>
+        </div>
+        <div className="path-item">
+          <span className="path-marker path-advanced" />
+          <strong>Avançado</strong>
+          <span>Negativos, expressões e pressão de tempo</span>
+        </div>
       </div>
       <div className="menu-actions-row">
         <button className="secondary-button" type="button" onClick={onResetProgress}>

@@ -17,8 +17,15 @@ export const defaultBalance: BalanceConfig = {
   scrollDamage: 25,
   focusMax: 100,
   focusStart: 0,
-  focusCorrectGain: 15,
-  focusTimerBonusSeconds: 5,
+  focusCorrectGain: 5,
+  focusComboGain: 2,
+  focusMissionBonus: 10,
+  focusDecayDelaySeconds: 7,
+  focusDecayIntervalSeconds: 1.5,
+  focusDecayPerSecond: 1,
+  timedFocusDecayPerSecond: 1,
+  focusCapByLevel: [30, 45, 60, 75, 100, 100],
+  focusTimerBonusSeconds: 0,
 };
 
 export function createInitialGameState(
@@ -32,8 +39,10 @@ export function createInitialGameState(
     currentLevelIndex: 0,
     playerHp: balance.playerMaxHp,
     focus: balance.focusStart,
+    focusDecayElapsedSeconds: 0,
     enemyHp: balance.enemyMaxHp,
     currentQuestion: null,
+    usedQuestionTexts: [],
     combo: 0,
     inventory: initialInventory,
     missionCurrent: 0,
@@ -55,6 +64,8 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return answerQuestion(state, action.selected);
     case 'TIMEOUT':
       return timeoutQuestion(state);
+    case 'FOCUS_DECAY_TICK':
+      return decayFocus(state, action.deltaSeconds);
     case 'NEXT_LEVEL':
       return nextLevel(state);
     case 'USE_SCROLL':
@@ -77,6 +88,8 @@ function startLevel(state: GameState, introEvents: GameEvent[] = []): GameState 
     status: 'playing',
     enemyHp: state.balance.enemyMaxHp,
     missionCurrent: 0,
+    focusDecayElapsedSeconds: 0,
+    usedQuestionTexts: [],
     activeShield: false,
     lastEvents,
   }, lastEvents);
@@ -85,9 +98,14 @@ function startLevel(state: GameState, introEvents: GameEvent[] = []): GameState 
 function withQuestion(state: GameState, lastEvents: GameEvent[] = []): GameState {
   if (state.status !== 'playing') return state;
 
+  const usedQuestionTexts = state.usedQuestionTexts ?? [];
+  const currentQuestion = generateQuestion(state.levels[state.currentLevelIndex], Math.random, usedQuestionTexts);
+
   return {
     ...state,
-    currentQuestion: generateQuestion(state.levels[state.currentLevelIndex]),
+    currentQuestion,
+    usedQuestionTexts: [...usedQuestionTexts, currentQuestion.text],
+    focusDecayElapsedSeconds: 0,
     lastEvents,
   };
 }
@@ -98,13 +116,17 @@ function answerQuestion(state: GameState, selected: number): GameState {
   if (selected === state.currentQuestion.correctValue) {
     const combo = state.combo + 1;
     const damage = getCorrectAnswerDamage(combo, state.balance);
+    const focusGain = getCorrectFocusGain(combo, state.balance);
+    const focus = addFocus(state, focusGain);
+    const focusGained = focus - state.focus;
     const nextState: GameState = {
       ...state,
       combo,
       missionCurrent: Math.min(state.balance.missionTarget, state.missionCurrent + 1),
       enemyHp: Math.max(0, state.enemyHp - damage),
-      focus: Math.min(state.balance.focusMax, state.focus + state.balance.focusCorrectGain),
-      lastEvents: [event('ANSWER_CORRECT', { combo, damage })],
+      focus,
+      focusDecayElapsedSeconds: 0,
+      lastEvents: [event('ANSWER_CORRECT', { combo, damage }), ...(focusGained > 0 ? [event('FOCUS_GAINED', { amount: focusGained })] : [])],
     };
     return resolveVictory(nextState);
   }
@@ -116,8 +138,13 @@ function answerQuestion(state: GameState, selected: number): GameState {
     combo: 0,
     activeShield: false,
     focus,
+    focusDecayElapsedSeconds: 0,
     playerHp: Math.max(0, state.playerHp - hpDamage),
-    lastEvents: [event('ANSWER_WRONG', { selected, correctValue: state.currentQuestion.correctValue }), event('PLAYER_DAMAGED', { damage: hpDamage, focusDamage: damage - hpDamage })],
+    lastEvents: [
+      event('ANSWER_WRONG', { selected, correctValue: state.currentQuestion.correctValue }),
+      ...focusDamageEvents(damage - hpDamage, focus),
+      ...hpDamageEvents(hpDamage),
+    ],
   };
   return resolveGameOver(nextState);
 }
@@ -130,8 +157,9 @@ function timeoutQuestion(state: GameState): GameState {
     ...state,
     combo: 0,
     focus,
+    focusDecayElapsedSeconds: 0,
     playerHp: Math.max(0, state.playerHp - hpDamage),
-    lastEvents: [event('TIMEOUT'), event('PLAYER_DAMAGED', { damage: hpDamage, focusDamage: state.balance.timeoutDamage - hpDamage })],
+    lastEvents: [event('TIMEOUT'), ...focusDamageEvents(state.balance.timeoutDamage - hpDamage, focus), ...hpDamageEvents(hpDamage)],
   };
   return resolveGameOver(nextState);
 }
@@ -140,11 +168,17 @@ function resolveVictory(state: GameState): GameState {
   if (!hasEnemyLost(state)) return state;
 
   const missionCompleted = state.missionCurrent >= state.balance.missionTarget;
+  const focus = missionCompleted ? addFocus(state, state.balance.focusMissionBonus) : state.focus;
   return {
     ...state,
+    focus,
     status: 'victory',
     inventory: missionCompleted ? restoreMissionRewards(state.inventory) : state.inventory,
-    lastEvents: [...state.lastEvents, event('LEVEL_COMPLETE', { missionCompleted })],
+    lastEvents: [
+      ...state.lastEvents,
+      ...(missionCompleted && focus > state.focus ? [event('FOCUS_GAINED', { amount: focus - state.focus })] : []),
+      event('LEVEL_COMPLETE', { missionCompleted }),
+    ],
   };
 }
 
@@ -184,6 +218,52 @@ function absorbDamageWithFocus(state: GameState, damage: number) {
     focus: Math.max(0, state.focus - damage),
     hpDamage: damage - focusDamage,
   };
+}
+
+function getCorrectFocusGain(combo: number, balance: BalanceConfig) {
+  return balance.focusCorrectGain + (combo >= balance.comboThreshold ? balance.focusComboGain : 0);
+}
+
+function addFocus(state: GameState, amount: number) {
+  const cap = state.balance.focusCapByLevel[state.currentLevelIndex] ?? state.balance.focusMax;
+  return Math.min(cap, state.focus + amount);
+}
+
+function decayFocus(state: GameState, deltaSeconds: number): GameState {
+  if (state.status !== 'playing' || state.focus <= 0 || deltaSeconds <= 0) return state;
+
+  const previousElapsed = state.focusDecayElapsedSeconds;
+  const nextElapsed = previousElapsed + deltaSeconds;
+  const delay = state.balance.focusDecayDelaySeconds;
+  const interval = state.balance.focusDecayIntervalSeconds;
+  const previousDrainSteps = Math.floor(Math.max(0, previousElapsed - delay) / interval);
+  const nextDrainSteps = Math.floor(Math.max(0, nextElapsed - delay) / interval);
+  const drainSteps = nextDrainSteps - previousDrainSteps;
+
+  if (drainSteps <= 0) {
+    return { ...state, focusDecayElapsedSeconds: nextElapsed, lastEvents: [] };
+  }
+
+  const level = state.levels[state.currentLevelIndex];
+  const rate = level.timeLimitSeconds ? state.balance.timedFocusDecayPerSecond : state.balance.focusDecayPerSecond;
+  const amount = Math.min(state.focus, drainSteps * rate);
+  const focus = Math.max(0, state.focus - amount);
+
+  return {
+    ...state,
+    focus,
+    focusDecayElapsedSeconds: nextElapsed,
+    lastEvents: [event('FOCUS_DRAINED', { amount }), ...(focus === 0 ? [event('FOCUS_DEPLETED')] : [])],
+  };
+}
+
+function focusDamageEvents(amount: number, remainingFocus: number) {
+  if (amount <= 0) return [];
+  return [event('FOCUS_ABSORBED_DAMAGE', { amount }), ...(remainingFocus === 0 ? [event('FOCUS_DEPLETED')] : [])];
+}
+
+function hpDamageEvents(damage: number) {
+  return damage > 0 ? [event('PLAYER_DAMAGED', { damage })] : [];
 }
 
 function useScroll(state: GameState, scroll: 'product' | 'division' | 'negative'): GameState {

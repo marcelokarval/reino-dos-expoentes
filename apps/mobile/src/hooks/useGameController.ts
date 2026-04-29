@@ -4,24 +4,44 @@ import { defaultGameBalance, levels } from '@reino/game-content';
 import { logger } from '@reino/logger';
 import { clearMobileProgress, defaultMobileProgress, loadMobileProgress, saveMobileProgress } from '../storage/progress-storage';
 
-export function useGameController() {
+interface UseGameControllerOptions {
+  paused?: boolean;
+}
+
+export function useGameController({ paused = false }: UseGameControllerOptions = {}) {
   const [state, dispatch] = useReducer(gameReducer, undefined, () => createInitialGameState(levels, defaultGameBalance));
   const [progress, setProgress] = useState(defaultMobileProgress);
   const [timeLeft, setTimeLeft] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const focusDecayRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pausedRef = useRef(paused);
+  const pendingQuestionRef = useRef(false);
+  const activeQuestionRef = useRef(state.currentQuestion);
   const level = state.levels[state.currentLevelIndex];
   const focusTimerBonus = level.timeLimitSeconds ? (state.focus / state.balance.focusMax) * state.balance.focusTimerBonusSeconds : 0;
   const effectiveTimeLimitSeconds = (level.timeLimitSeconds ?? 0) + focusTimerBonus;
 
   useEffect(() => {
+    pausedRef.current = paused;
+    if (!paused && pendingQuestionRef.current) {
+      pendingQuestionRef.current = false;
+      dispatch({ type: 'GENERATE_QUESTION' });
+    }
+  }, [paused]);
+
+  useEffect(() => {
     if (timerRef.current) clearInterval(timerRef.current);
+
+    if (paused) return;
 
     if (state.status !== 'playing' || !effectiveTimeLimitSeconds || state.currentQuestion === null) {
       setTimeLeft(0);
       return;
     }
 
-    setTimeLeft(effectiveTimeLimitSeconds);
+    const questionChanged = activeQuestionRef.current !== state.currentQuestion;
+    activeQuestionRef.current = state.currentQuestion;
+    setTimeLeft((current) => (questionChanged || current <= 0 ? effectiveTimeLimitSeconds : current));
     timerRef.current = setInterval(() => {
       setTimeLeft((current) => {
         const next = Math.max(0, current - 0.1);
@@ -37,7 +57,24 @@ export function useGameController() {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [state.status, state.currentQuestion, effectiveTimeLimitSeconds]);
+  }, [paused, state.status, state.currentQuestion, effectiveTimeLimitSeconds]);
+
+  useEffect(() => {
+    if (focusDecayRef.current) {
+      clearInterval(focusDecayRef.current);
+      focusDecayRef.current = null;
+    }
+
+    if (paused || state.status !== 'playing' || state.currentQuestion === null || state.focus <= 0) return;
+
+    focusDecayRef.current = setInterval(() => {
+      dispatch({ type: 'FOCUS_DECAY_TICK', deltaSeconds: state.balance.focusDecayIntervalSeconds });
+    }, state.balance.focusDecayIntervalSeconds * 1000);
+
+    return () => {
+      if (focusDecayRef.current) clearInterval(focusDecayRef.current);
+    };
+  }, [paused, state.status, state.currentQuestion, state.focus, state.balance.focusDecayIntervalSeconds]);
 
   useEffect(() => {
     loadMobileProgress().then(setProgress).catch((error: unknown) => logger.warn('MobileStorage', 'Progress load failed', error));
@@ -61,8 +98,15 @@ export function useGameController() {
   }, [state.currentLevelIndex, state.status]);
 
   function answer(selected: number) {
+    if (paused) return;
     dispatch({ type: 'ANSWER', selected });
-    setTimeout(() => dispatch({ type: 'GENERATE_QUESTION' }), 700);
+    setTimeout(() => {
+      if (pausedRef.current) {
+        pendingQuestionRef.current = true;
+        return;
+      }
+      dispatch({ type: 'GENERATE_QUESTION' });
+    }, 700);
   }
 
   return {

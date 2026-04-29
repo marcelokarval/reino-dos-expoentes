@@ -31,6 +31,7 @@ describe('gameReducer', () => {
     const state = playingState();
     expect(state.status).toBe('playing');
     expect(state.currentQuestion).not.toBeNull();
+    expect(state.usedQuestionTexts).toContain(state.currentQuestion!.text);
     expect(state.enemyHp).toBe(100);
     expect(state.focus).toBe(0);
     expect(state.missionCurrent).toBe(0);
@@ -38,13 +39,36 @@ describe('gameReducer', () => {
   });
 
   it('correct answers increase mission progress and damage enemy', () => {
-    const state = playingState();
+    const state = { ...playingState(), focusDecayElapsedSeconds: 9 };
     const next = gameReducer(state, { type: 'ANSWER', selected: state.currentQuestion!.correctValue });
     expect(next.missionCurrent).toBe(1);
     expect(next.enemyHp).toBe(82);
     expect(next.combo).toBe(1);
-    expect(next.focus).toBe(15);
+    expect(next.focus).toBe(5);
+    expect(next.focusDecayElapsedSeconds).toBe(0);
     expect(next.lastEvents.some((event) => event.type === 'ANSWER_CORRECT')).toBe(true);
+    expect(next.lastEvents).toContainEqual(expect.objectContaining({ type: 'FOCUS_GAINED', payload: { amount: 5 } }));
+  });
+
+  it('adds a small focus bonus for combo streaks', () => {
+    const state = { ...playingState(), combo: 2, focus: 10 };
+    const next = gameReducer(state, { type: 'ANSWER', selected: state.currentQuestion!.correctValue });
+    expect(next.combo).toBe(3);
+    expect(next.focus).toBe(17);
+    expect(next.lastEvents).toContainEqual(expect.objectContaining({ type: 'FOCUS_GAINED', payload: { amount: 7 } }));
+  });
+
+  it('caps focus by the current phase', () => {
+    const state = { ...playingState(), focus: 28 };
+    const next = gameReducer(state, { type: 'ANSWER', selected: state.currentQuestion!.correctValue });
+    expect(next.focus).toBe(30);
+  });
+
+  it('does not emit a focus gained event when already capped', () => {
+    const state = { ...playingState(), focus: 30 };
+    const next = gameReducer(state, { type: 'ANSWER', selected: state.currentQuestion!.correctValue });
+    expect(next.focus).toBe(30);
+    expect(next.lastEvents.some((event) => event.type === 'FOCUS_GAINED')).toBe(false);
   });
 
   it('keeps accumulated focus when moving to the next level', () => {
@@ -60,6 +84,7 @@ describe('gameReducer', () => {
     expect(next.playerHp).toBe(95);
     expect(next.combo).toBe(0);
     expect(next.lastEvents.some((event) => event.type === 'ANSWER_WRONG')).toBe(true);
+    expect(next.lastEvents).toContainEqual(expect.objectContaining({ type: 'FOCUS_ABSORBED_DAMAGE', payload: { amount: 15 } }));
   });
 
   it('wrong answers do not damage hp while focus absorbs all damage', () => {
@@ -67,6 +92,30 @@ describe('gameReducer', () => {
     const next = gameReducer(state, { type: 'ANSWER', selected: state.currentQuestion!.correctValue + 99 });
     expect(next.focus).toBe(5);
     expect(next.playerHp).toBe(100);
+    expect(next.lastEvents.some((event) => event.type === 'PLAYER_DAMAGED')).toBe(false);
+  });
+
+  it('does not drain focus before the 7 second grace window expires', () => {
+    const state = { ...playingState(), focus: 20 };
+    const next = gameReducer(state, { type: 'FOCUS_DECAY_TICK', deltaSeconds: 6.9 });
+    expect(next.focus).toBe(20);
+  });
+
+  it('drains one focus only after each full 1.5 second decay interval', () => {
+    const state = { ...playingState(), focus: 20 };
+    const beforeInterval = gameReducer(state, { type: 'FOCUS_DECAY_TICK', deltaSeconds: 8.4 });
+    expect(beforeInterval.focus).toBe(20);
+
+    const next = gameReducer(beforeInterval, { type: 'FOCUS_DECAY_TICK', deltaSeconds: 0.1 });
+    expect(next.focus).toBe(19);
+    expect(next.lastEvents).toContainEqual(expect.objectContaining({ type: 'FOCUS_DRAINED', payload: { amount: 1 } }));
+  });
+
+  it('keeps timed phase focus drain to one point per full 1.5 second interval', () => {
+    const timedLevels = [{ ...levels[0], timeLimitSeconds: 12 }];
+    const state = { ...gameReducer(createInitialGameState(timedLevels), { type: 'START_GAME' }), focus: 20 };
+    const next = gameReducer(state, { type: 'FOCUS_DECAY_TICK', deltaSeconds: 8.5 });
+    expect(next.focus).toBe(19);
   });
 
   it('negative scroll shield reduces wrong-answer damage once', () => {
@@ -94,6 +143,18 @@ describe('gameReducer', () => {
     }
     expect(state.status).toBe('victory');
     expect(state.missionCurrent).toBe(5);
+  });
+
+  it('does not repeat generated questions during the current level flow', () => {
+    let state = playingState();
+    const questionTexts = [state.currentQuestion!.text];
+
+    for (let count = 0; count < 12; count++) {
+      state = gameReducer(state, { type: 'GENERATE_QUESTION' });
+      questionTexts.push(state.currentQuestion!.text);
+    }
+
+    expect(new Set(questionTexts).size).toBe(questionTexts.length);
   });
 
   it('division scroll can finish a level', () => {

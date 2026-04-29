@@ -1,0 +1,58 @@
+import type { LevelDefinition } from '@reino/game-core';
+
+export const levels: LevelDefinition[] = [
+  {
+    id: 'forest-products',
+    name: '1. FLORESTA DOS PRODUTOS',
+    icon: '🌲👾',
+    property: 'multiplication',
+    rule: 'aᵐ · aⁿ = aᵐ⁺ⁿ',
+    difficulty: 4,
+    timeLimitSeconds: 0,
+  },
+  {
+    id: 'division-cave',
+    name: '2. CAVERNA DAS DIVISÕES',
+    icon: '🦇👾',
+    property: 'division',
+    rule: 'aᵐ / aⁿ = aᵐ⁻ⁿ',
+    difficulty: 5,
+    timeLimitSeconds: 0,
+  },
+  {
+    id: 'power-tower',
+    name: '3. TORRE DAS POTÊNCIAS',
+    icon: '🏰👻',
+    property: 'powerOfPower',
+    rule: '(aᵐ)ⁿ = aᵐ˙ⁿ',
+    difficulty: 6,
+    timeLimitSeconds: 0,
+  },
+  {
+    id: 'zero-desert',
+    name: '4. DESERTO DO ZERO',
+    icon: '🏜️🦂',
+    property: 'zeroExponent',
+    rule: 'a⁰ = 1',
+    difficulty: 7,
+    timeLimitSeconds: 0,
+  },
+  {
+    id: 'negative-abyss',
+    name: '5. ABISMO NEGATIVO',
+    icon: '🌑👹',
+    property: 'negative',
+    rule: 'a⁻ⁿ = 1/aⁿ',
+    difficulty: 8,
+    timeLimitSeconds: 15,
+  },
+  {
+    id: 'chaos-throne',
+    name: '6. TRONO DO CAOS',
+    icon: '👑🔥',
+    property: 'complex',
+    rule: 'Mistura Total!',
+    difficulty: 10,
+    timeLimitSeconds: 12,
+  },
+];

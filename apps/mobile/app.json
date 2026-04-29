@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "name": "Reino dos Expoentes",
+    "slug": "reino-dos-expoentes",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "assetBundlePatterns": ["**/*"],
+    "android": {
+      "package": "com.reino.expoentes"
+    },
+    "ios": {
+      "bundleIdentifier": "com.reino.expoentes"
+    }
+  }
+}

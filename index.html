@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reino dos Expoentes - Edição Lendária</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="centered">
+  <div id="game-container">
+    <div id="main-menu">
+      <h1 class="game-title">REINO DOS EXPOENTES</h1>
+      <p class="menu-subtitle">Domine as propriedades, conquiste o reino.</p>
+      <div class="menu-guide">
+        <p>
+          📘 <b>Básico:</b> Produto e Divisão (Combate Inicial)<br>
+          📗 <b>Intermediário:</b> Potência de Potência e Zero (Combos Ativos)<br>
+          📕 <b>Avançado:</b> Negativos e Expressões (Pressão de Tempo!)
+        </p>
+      </div>
+      <button id="start-button" class="start-button" type="button">INICIAR AVENTURA</button>
+    </div>
+
+    <div id="game-ui" class="hidden">
+      <div id="ui-top" class="status-bar">
+        <div class="bar-container">
+          <div class="label">❤️ Herói (HP)</div>
+          <div class="progress-bg"><div id="player-hp" class="progress-fill hp-fill"></div></div>
+        </div>
+        <div class="bar-container">
+          <div class="label">👾 Inimigo (HP)</div>
+          <div class="progress-bg"><div id="enemy-hp" class="progress-fill enemy-hp-fill"></div></div>
+        </div>
+        <div class="bar-container">
+          <div class="label">📜 Missão: <span id="mission-progress">0/5</span></div>
+          <div class="progress-bg"><div id="mission-bar" class="progress-fill xp-fill"></div></div>
+        </div>
+      </div>
+
+      <div id="combat-area">
+        <div>
+          <div id="stage-name" class="stage-name">FASE</div>
+          <div id="monster-container">
+            <div id="monster-icon" class="monster-display floating">👾</div>
+          </div>
+          <div class="question-box">
+            <div id="question-text">?</div>
+            <div id="timer-bar"></div>
+          </div>
+          <div class="options-grid" id="options"></div>
+          <div id="feedback"></div>
+        </div>
+
+        <div class="side-panel">
+          <div class="combo-badge" id="combo-text">COMBO: 0</div>
+          <div class="professor-box">
+            <strong>👨‍🏫 Professor:</strong><br>
+            <span id="professor-speech">Bem-vindo, recruta!</span>
+          </div>
+
+          <div class="inventory-section">
+            <div class="label inventory-label">📜 Pergaminhos</div>
+            <div class="scroll-item">
+              <span>Produto (Auto)</span>
+              <button id="scroll-product-button" class="btn-use-scroll" type="button">USAR (<span id="count-prod">1</span>)</button>
+            </div>
+            <div class="scroll-item">
+              <span>Divisão (Stun)</span>
+              <button id="scroll-division-button" class="btn-use-scroll" type="button">USAR (<span id="count-div">1</span>)</button>
+            </div>
+            <div class="scroll-item">
+              <span>Expo. Neg. (Escudo)</span>
+              <button id="scroll-negative-button" class="btn-use-scroll" type="button">USAR (<span id="count-neg">1</span>)</button>
+            </div>
+            <div class="scroll-item potion">
+              <span>🧪 Poção</span>
+              <button id="potion-button" class="btn-use-scroll btn-potion" type="button">USAR (<span id="potion-count">1</span>)</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="victory-screen" class="hidden overlay-screen">
+      <h2 id="victory-title">VITÓRIA!</h2>
+      <p id="reward-text" class="reward-text"></p>
+      <div id="conquest-alert" class="conquest-alert"></div>
+      <div class="trophy-icon">🏆</div>
+      <button id="next-level-button" class="full-width-button" type="button">AVANÇAR</button>
+    </div>
+  </div>
+
+  <script src="js/logger.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

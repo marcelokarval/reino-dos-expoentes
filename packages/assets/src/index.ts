@@ -70,6 +70,12 @@ export const enemySpritesByKey = {
 
 export type EnemySpriteKey = keyof typeof enemySpritesByKey;
 
+export const professorSpritesByKey = {
+  guide: characterTile(0, 0, 'Professor guide'),
+} as const;
+
+export type ProfessorSpriteKey = keyof typeof professorSpritesByKey;
+
 export const uiSpritesByKey = {
   hp: microTile(0, 0, 'HP icon'),
   enemy: microTile(1, 0, 'Enemy icon'),
@@ -123,6 +129,7 @@ export const assetCatalog = {
   sprites: {
     sheets: spriteSheets,
     enemies: enemySpritesByKey,
+    professor: professorSpritesByKey,
     ui: uiSpritesByKey,
   },
   audio: {

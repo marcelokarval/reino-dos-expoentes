@@ -16,9 +16,10 @@ export const defaultGameBalance: BalanceConfig = {
   focusCorrectGain: 5,
   focusComboGain: 2,
   focusMissionBonus: 10,
-  focusDecayDelaySeconds: 5,
+  focusDecayDelaySeconds: 7,
+  focusDecayIntervalSeconds: 1.5,
   focusDecayPerSecond: 1,
-  timedFocusDecayPerSecond: 2,
+  timedFocusDecayPerSecond: 1,
   focusCapByLevel: [30, 45, 60, 75, 100, 100],
   focusTimerBonusSeconds: 0,
 };

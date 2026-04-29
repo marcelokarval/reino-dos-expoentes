@@ -9,8 +9,8 @@ import { useGameSfx } from './hooks/useGameSfx';
 import { colors, spacing } from './theme/tokens';
 
 export function MobileApp() {
-  const game = useGameController();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const game = useGameController({ paused: settingsOpen });
   useGameSfx(game.state.lastEvents, game.progress.sfxEnabled, game.progress.sfxVolume);
   useGameMusic({ enabled: game.progress.musicEnabled, status: game.state.status, levelIndex: game.state.currentLevelIndex, volume: game.progress.musicVolume });
 

@@ -1,5 +1,6 @@
 import type { useGameController } from '../hooks/useGameController';
 import { getProfessorMessage } from '@reino/game-content';
+import { professorSpritesByKey } from '@reino/assets';
 
 interface VictoryScreenProps {
   game: ReturnType<typeof useGameController>;
@@ -18,6 +19,7 @@ export function VictoryScreen({ game, title = 'VITÓRIA!', message }: VictoryScr
     property: game.level.property,
     playerHp: game.state.playerHp,
   });
+  const professorSprite = professorSpritesByKey.guide;
 
   return (
     <div className="overlay-screen victory-celebration">
@@ -41,8 +43,21 @@ export function VictoryScreen({ game, title = 'VITÓRIA!', message }: VictoryScr
       </div>
       {missionCompleted && <div className="conquest-alert">Missão concluída. Recursos restaurados para a próxima fase.</div>}
       <div className="professor-reaction professor-celebrate">
-        <strong>Professor</strong>
-        <span>{professorMessage.text}</span>
+        <div className="professor-avatar" aria-label={professorSprite.label} title={professorSprite.label}>
+          <span
+            className="sprite-tile professor-avatar-tile"
+            style={{
+              backgroundImage: `url(${professorSprite.sheetPath})`,
+              backgroundPosition: `-${professorSprite.x}px -${professorSprite.y}px`,
+              width: professorSprite.width,
+              height: professorSprite.height,
+            }}
+          />
+        </div>
+        <div className="professor-copy">
+          <strong>Professor</strong>
+          <span>{professorMessage.text}</span>
+        </div>
       </div>
       {nextLevel && <p className="next-level-note">Próximo desafio: {nextLevel.name}</p>}
       <button

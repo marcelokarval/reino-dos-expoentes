@@ -53,6 +53,7 @@ export interface BalanceConfig {
   focusComboGain: number;
   focusMissionBonus: number;
   focusDecayDelaySeconds: number;
+  focusDecayIntervalSeconds: number;
   focusDecayPerSecond: number;
   timedFocusDecayPerSecond: number;
   focusCapByLevel: number[];
@@ -72,6 +73,8 @@ export interface Question {
   options: number[];
 }
 
+export type QuestionSeed = Pick<Question, 'text' | 'correctValue'>;
+
 export interface GameEvent {
   type: GameEventType;
   payload?: Record<string, unknown>;
@@ -87,6 +90,7 @@ export interface GameState {
   focusDecayElapsedSeconds: number;
   enemyHp: number;
   currentQuestion: Question | null;
+  usedQuestionTexts: string[];
   combo: number;
   inventory: InventoryState;
   missionCurrent: number;

@@ -5,6 +5,7 @@ import { QuestionCard } from '../components/QuestionCard';
 import { StatusBars } from '../components/StatusBars';
 import type { useGameController } from '../hooks/useGameController';
 import { enemiesByLevelId, getProfessorMessage } from '@reino/game-content';
+import { professorSpritesByKey } from '@reino/assets';
 import { useEffect, useRef, useState } from 'react';
 import type { GameEventType } from '@reino/game-core';
 
@@ -32,6 +33,7 @@ export function BattleScreen({ game }: BattleScreenProps) {
   const missionProgress = game.state.missionCurrent / game.state.balance.missionTarget;
   const missionGainClassName = missionProgress >= 1 ? 'mission-gain mission-gain-gold' : missionProgress >= 0.6 ? 'mission-gain mission-gain-warm' : 'mission-gain mission-gain-cool';
   const professorMessage = feedbackSnapshot?.professorMessage;
+  const professorSprite = professorSpritesByKey.guide;
 
   useEffect(() => {
     if (game.state.lastEvents.length === 0) return;
@@ -92,8 +94,21 @@ export function BattleScreen({ game }: BattleScreenProps) {
         <div className="side-panel-stack">
           {professorMessage && (
             <div className={`professor-reaction professor-chat-bubble professor-${professorMessage.tone}`} key={feedbackSnapshot?.id}>
-              <strong>Professor</strong>
-              <span>{professorMessage.text}</span>
+              <div className="professor-avatar" aria-label={professorSprite.label} title={professorSprite.label}>
+                <span
+                  className="sprite-tile professor-avatar-tile"
+                  style={{
+                    backgroundImage: `url(${professorSprite.sheetPath})`,
+                    backgroundPosition: `-${professorSprite.x}px -${professorSprite.y}px`,
+                    width: professorSprite.width,
+                    height: professorSprite.height,
+                  }}
+                />
+              </div>
+              <div className="professor-copy">
+                <strong>Professor</strong>
+                <span>{professorMessage.text}</span>
+              </div>
             </div>
           )}
           <InventoryPanel state={game.state} actions={game.actions} />

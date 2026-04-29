@@ -241,7 +241,10 @@ button:disabled { cursor: not-allowed; filter: grayscale(0.5); opacity: 0.6; }
 
 .side-panel { display: flex; flex-direction: column; gap: 12px; padding: 15px; overflow-y: auto; background: rgba(11, 11, 19, 0.62); border: 1px solid var(--line); border-radius: 17px; }
 .side-panel-stack { position: relative; display: flex; flex-direction: column; justify-content: flex-end; min-height: 100%; }
-.professor-reaction { display: flex; flex-direction: column; gap: 6px; padding: 12px; font-size: 13px; line-height: 1.35; text-align: left; background: rgba(33, 214, 199, 0.08); border-left: 4px solid var(--secondary); border-radius: 12px; }
+.professor-reaction { display: flex; align-items: center; gap: 12px; padding: 12px; font-size: 13px; line-height: 1.35; text-align: left; background: rgba(33, 214, 199, 0.08); border-left: 4px solid var(--secondary); border-radius: 12px; }
+.professor-copy { display: flex; flex: 1; flex-direction: column; gap: 5px; min-width: 0; }
+.professor-avatar { flex: 0 0 auto; width: 48px; height: 48px; display: inline-flex; align-items: center; justify-content: center; overflow: hidden; background: rgba(0, 0, 0, 0.24); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 14px; }
+.professor-avatar-tile { transform: scale(3); }
 .professor-chat-bubble { position: absolute; top: 0; right: 0; left: 0; max-height: 120px; overflow: hidden; animation: professorBubbleLifecycle 10s ease both; }
 .professor-chat-bubble::before { position: absolute; top: 20px; left: -10px; width: 14px; height: 14px; content: ''; background: inherit; border-left: inherit; border-bottom: inherit; transform: rotate(45deg); }
 .professor-praise { border-color: var(--secondary); }

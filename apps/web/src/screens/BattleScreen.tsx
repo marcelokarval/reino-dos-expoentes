@@ -92,7 +92,7 @@ export function BattleScreen({ game }: BattleScreenProps) {
         <div className="side-panel-stack">
           {professorMessage && (
             <div className={`professor-reaction professor-chat-bubble professor-${professorMessage.tone}`} key={feedbackSnapshot?.id}>
-              <strong>👨‍🏫 Professor</strong>
+              <strong>Professor</strong>
               <span>{professorMessage.text}</span>
             </div>
           )}

@@ -1,5 +1,8 @@
 export interface SpriteDefinition {
   sheetPath: string;
+  sheetKey: SpriteSheetKey;
+  sheetWidth: number;
+  sheetHeight: number;
   x: number;
   y: number;
   width: number;
@@ -8,31 +11,75 @@ export interface SpriteDefinition {
   source: string;
 }
 
-const kenneyRoguelikeSheet = 'assets/sprites/kenney-roguelike.png';
+export const spriteSheets = {
+  roguelike: { path: 'assets/sprites/kenney-roguelike.png', width: 968, height: 526, source: 'kenney-roguelike-rpg-pack' },
+  characters: { path: 'assets/sprites/kenney-roguelike-characters.png', width: 918, height: 203, source: 'kenney-roguelike-characters' },
+  dungeon: { path: 'assets/sprites/kenney-roguelike-dungeon.png', width: 492, height: 305, source: 'kenney-roguelike-caves-dungeons' },
+  tinyDungeon: { path: 'assets/sprites/kenney-tiny-dungeon.png', width: 192, height: 176, source: 'kenney-tiny-dungeon' },
+  micro: { path: 'assets/sprites/kenney-micro-roguelike.png', width: 128, height: 80, source: 'kenney-micro-roguelike' },
+  uiRpg: { path: 'assets/sprites/kenney-ui-rpg.png', width: 512, height: 512, source: 'kenney-ui-pack-rpg-expansion' },
+} as const;
 
-function tile(column: number, row: number, label: string): SpriteDefinition {
-  const step = 17;
+export type SpriteSheetKey = keyof typeof spriteSheets;
+
+function tile(sheetKey: SpriteSheetKey, column: number, row: number, label: string, size = 16, step = size + 1): SpriteDefinition {
+  const sheet = spriteSheets[sheetKey];
   return {
-    sheetPath: kenneyRoguelikeSheet,
+    sheetPath: sheet.path,
+    sheetKey,
+    sheetWidth: sheet.width,
+    sheetHeight: sheet.height,
     x: column * step,
     y: row * step,
-    width: 16,
-    height: 16,
+    width: size,
+    height: size,
     label,
-    source: 'kenney-roguelike-rpg-pack',
+    source: sheet.source,
   };
 }
 
+function roguelikeTile(column: number, row: number, label: string): SpriteDefinition {
+  return tile('roguelike', column, row, label);
+}
+
+function characterTile(column: number, row: number, label: string): SpriteDefinition {
+  return tile('characters', column, row, label);
+}
+
+function dungeonTile(column: number, row: number, label: string): SpriteDefinition {
+  return tile('dungeon', column, row, label);
+}
+
+function microTile(column: number, row: number, label: string): SpriteDefinition {
+  return tile('micro', column, row, label, 8, 8);
+}
+
+function uiTile(column: number, row: number, label: string): SpriteDefinition {
+  const step = 17;
+  return tile('uiRpg', column, row, label, 16, step);
+}
+
 export const enemySpritesByKey = {
-  'forest-guardian': tile(14, 9, 'Forest guardian placeholder'),
-  'division-bat': tile(49, 0, 'Cave bat placeholder'),
-  'power-ghost': tile(55, 15, 'Tower ghost placeholder'),
-  'zero-scorpion': tile(46, 17, 'Desert creature placeholder'),
-  'negative-demon': tile(54, 1, 'Negative demon placeholder'),
-  'chaos-king': tile(42, 15, 'Chaos king placeholder'),
+  'forest-guardian': characterTile(1, 3, 'Forest guardian'),
+  'division-bat': characterTile(8, 1, 'Division cave bat'),
+  'power-ghost': characterTile(1, 5, 'Power tower mage'),
+  'zero-scorpion': dungeonTile(2, 3, 'Zero desert scorpion'),
+  'negative-demon': characterTile(0, 9, 'Negative abyss demon'),
+  'chaos-king': characterTile(1, 10, 'Chaos throne overlord'),
 } as const;
 
 export type EnemySpriteKey = keyof typeof enemySpritesByKey;
+
+export const uiSpritesByKey = {
+  hp: microTile(0, 0, 'HP icon'),
+  enemy: microTile(1, 0, 'Enemy icon'),
+  mission: microTile(2, 0, 'Mission icon'),
+  focus: microTile(3, 0, 'Focus icon'),
+  scroll: uiTile(0, 0, 'Scroll resource icon'),
+  potion: uiTile(1, 0, 'Potion resource icon'),
+} as const;
+
+export type UiSpriteKey = keyof typeof uiSpritesByKey;
 
 export const musicByCue = {
   menu: { path: 'assets/audio/music/menu-theme.wav', label: 'Menu theme' },
@@ -74,7 +121,9 @@ export function getBattleMusicCue(levelIndex: number): MusicCue {
 
 export const assetCatalog = {
   sprites: {
+    sheets: spriteSheets,
     enemies: enemySpritesByKey,
+    ui: uiSpritesByKey,
   },
   audio: {
     music: musicByCue,

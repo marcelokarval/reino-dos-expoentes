@@ -9,6 +9,7 @@ export function useGameController() {
   const [progress, setProgress] = useState(defaultMobileProgress);
   const [timeLeft, setTimeLeft] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const focusDecayRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const level = state.levels[state.currentLevelIndex];
   const focusTimerBonus = level.timeLimitSeconds ? (state.focus / state.balance.focusMax) * state.balance.focusTimerBonusSeconds : 0;
   const effectiveTimeLimitSeconds = (level.timeLimitSeconds ?? 0) + focusTimerBonus;
@@ -38,6 +39,23 @@ export function useGameController() {
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [state.status, state.currentQuestion, effectiveTimeLimitSeconds]);
+
+  useEffect(() => {
+    if (focusDecayRef.current) {
+      clearInterval(focusDecayRef.current);
+      focusDecayRef.current = null;
+    }
+
+    if (state.status !== 'playing' || state.currentQuestion === null || state.focus <= 0) return;
+
+    focusDecayRef.current = setInterval(() => {
+      dispatch({ type: 'FOCUS_DECAY_TICK', deltaSeconds: 1 });
+    }, 1000);
+
+    return () => {
+      if (focusDecayRef.current) clearInterval(focusDecayRef.current);
+    };
+  }, [state.status, state.currentQuestion, state.focus]);
 
   useEffect(() => {
     loadMobileProgress().then(setProgress).catch((error: unknown) => logger.warn('MobileStorage', 'Progress load failed', error));

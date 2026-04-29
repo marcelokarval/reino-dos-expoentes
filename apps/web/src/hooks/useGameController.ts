@@ -9,6 +9,7 @@ export function useGameController() {
   const [progress, setProgress] = useState(loadWebProgress);
   const [timeLeft, setTimeLeft] = useState(0);
   const timerRef = useRef<number | null>(null);
+  const focusDecayRef = useRef<number | null>(null);
 
   const level = state.levels[state.currentLevelIndex];
   const focusTimerBonus = level.timeLimitSeconds ? (state.focus / state.balance.focusMax) * state.balance.focusTimerBonusSeconds : 0;
@@ -42,6 +43,23 @@ export function useGameController() {
       if (timerRef.current) window.clearInterval(timerRef.current);
     };
   }, [state.status, state.currentQuestion, effectiveTimeLimitSeconds]);
+
+  useEffect(() => {
+    if (focusDecayRef.current) {
+      window.clearInterval(focusDecayRef.current);
+      focusDecayRef.current = null;
+    }
+
+    if (state.status !== 'playing' || state.currentQuestion === null || state.focus <= 0) return;
+
+    focusDecayRef.current = window.setInterval(() => {
+      dispatch({ type: 'FOCUS_DECAY_TICK', deltaSeconds: 1 });
+    }, 1000);
+
+    return () => {
+      if (focusDecayRef.current) window.clearInterval(focusDecayRef.current);
+    };
+  }, [state.status, state.currentQuestion, state.focus]);
 
   useEffect(() => {
     state.lastEvents.forEach((gameEvent) => logger.info('GameEvent', gameEvent.type, gameEvent.payload));

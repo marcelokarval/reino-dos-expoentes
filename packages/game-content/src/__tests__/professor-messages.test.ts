@@ -43,4 +43,13 @@ describe('getProfessorMessage', () => {
     expect(negative.text).toContain('negativo');
     expect(negative.text).not.toBe(multiplication.text);
   });
+
+  it('returns phase-aware timeout coaching', () => {
+    expect(getProfessorMessage({ eventTypes: ['TIMEOUT'], combo: 0, property: 'multiplication' }).text).toContain('some');
+    expect(getProfessorMessage({ eventTypes: ['TIMEOUT'], combo: 0, property: 'division' }).text).toContain('subtraia');
+    expect(getProfessorMessage({ eventTypes: ['TIMEOUT'], combo: 0, property: 'powerOfPower' }).text).toContain('multiplica');
+    expect(getProfessorMessage({ eventTypes: ['TIMEOUT'], combo: 0, property: 'zeroExponent' }).text).toContain('zero');
+    expect(getProfessorMessage({ eventTypes: ['TIMEOUT'], combo: 0, property: 'negative' }).text).toContain('inverso');
+    expect(getProfessorMessage({ eventTypes: ['TIMEOUT'], combo: 0, property: 'complex' }).text).toContain('partes');
+  });
 });

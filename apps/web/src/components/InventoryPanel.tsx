@@ -13,11 +13,11 @@ export function InventoryPanel({ state, actions }: InventoryPanelProps) {
       <div className={itemUsed ? 'side-panel inventory-pulse' : 'side-panel'}>
         <div className="combo-badge">COMBO: {state.combo}</div>
       <div className="inventory-section">
-        <div className="label inventory-label">📜 Pergaminhos</div>
+        <div className="label inventory-label">Recursos táticos</div>
         <InventoryItem label="Produto (Auto)" count={state.inventory.scrollProduct} onUse={actions.useProductScroll} />
         <InventoryItem label="Divisão (Stun)" count={state.inventory.scrollDivision} onUse={actions.useDivisionScroll} />
         <InventoryItem label="Expo. Neg. (Escudo)" count={state.inventory.scrollNegative} onUse={actions.useNegativeScroll} />
-        <InventoryItem label="🧪 Poção" count={state.inventory.potions} onUse={actions.usePotion} potion />
+        <InventoryItem label="Poção" count={state.inventory.potions} onUse={actions.usePotion} potion />
       </div>
     </div>
   );

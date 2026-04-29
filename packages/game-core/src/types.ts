@@ -20,7 +20,11 @@ export type GameEventType =
   | 'GAME_OVER'
   | 'GAME_COMPLETED'
   | 'TIMEOUT'
-  | 'TIMEOUT_WARNING';
+  | 'TIMEOUT_WARNING'
+  | 'FOCUS_GAINED'
+  | 'FOCUS_DRAINED'
+  | 'FOCUS_DEPLETED'
+  | 'FOCUS_ABSORBED_DAMAGE';
 
 export interface LevelDefinition {
   id: string;
@@ -46,6 +50,12 @@ export interface BalanceConfig {
   focusMax: number;
   focusStart: number;
   focusCorrectGain: number;
+  focusComboGain: number;
+  focusMissionBonus: number;
+  focusDecayDelaySeconds: number;
+  focusDecayPerSecond: number;
+  timedFocusDecayPerSecond: number;
+  focusCapByLevel: number[];
   focusTimerBonusSeconds: number;
 }
 
@@ -74,6 +84,7 @@ export interface GameState {
   currentLevelIndex: number;
   playerHp: number;
   focus: number;
+  focusDecayElapsedSeconds: number;
   enemyHp: number;
   currentQuestion: Question | null;
   combo: number;
@@ -87,6 +98,7 @@ export type GameAction =
   | { type: 'START_GAME' }
   | { type: 'ANSWER'; selected: number }
   | { type: 'TIMEOUT' }
+  | { type: 'FOCUS_DECAY_TICK'; deltaSeconds: number }
   | { type: 'NEXT_LEVEL' }
   | { type: 'USE_SCROLL'; scroll: 'product' | 'division' | 'negative' }
   | { type: 'USE_POTION' }

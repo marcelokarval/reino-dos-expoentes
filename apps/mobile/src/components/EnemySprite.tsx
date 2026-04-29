@@ -1,5 +1,5 @@
 import { Image, StyleSheet, Text, View } from 'react-native';
-import { enemySpritesByKey, type EnemySpriteKey } from '@reino/assets';
+import { enemySpritesByKey, type EnemySpriteKey, type SpriteSheetKey } from '@reino/assets';
 import type { GameEvent } from '@reino/game-core';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import { useEffect } from 'react';
@@ -10,7 +10,14 @@ interface EnemySpriteProps {
   events?: GameEvent[];
 }
 
-const spriteSheet = require('../../assets/sprites/kenney-roguelike.png');
+const spriteSheets: Record<SpriteSheetKey, ReturnType<typeof require>> = {
+  roguelike: require('../../assets/sprites/kenney-roguelike.png'),
+  characters: require('../../assets/sprites/kenney-roguelike-characters.png'),
+  dungeon: require('../../assets/sprites/kenney-roguelike-dungeon.png'),
+  tinyDungeon: require('../../assets/sprites/kenney-tiny-dungeon.png'),
+  micro: require('../../assets/sprites/kenney-micro-roguelike.png'),
+  uiRpg: require('../../assets/sprites/kenney-ui-rpg.png'),
+};
 const scale = 5;
 
 export function EnemySprite({ icon, spriteKey, events = [] }: EnemySpriteProps) {
@@ -42,10 +49,10 @@ export function EnemySprite({ icon, spriteKey, events = [] }: EnemySpriteProps) 
           ]}
         >
           <Image
-            source={spriteSheet}
+            source={spriteSheets[sprite.sheetKey]}
             style={{
-              width: 968 * scale,
-              height: 526 * scale,
+              width: sprite.sheetWidth * scale,
+              height: sprite.sheetHeight * scale,
               transform: [
                 { translateX: -sprite.x * scale },
                 { translateY: -sprite.y * scale },

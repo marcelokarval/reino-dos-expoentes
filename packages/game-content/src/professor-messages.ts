@@ -27,10 +27,14 @@ const messageBanks = {
     'Combo brilhante! O reino já sente sua evolução.',
     'Muito bem! Quando você encadeia acertos, a estratégia fica clara.',
   ],
-  timeout: [
-    'Sem pressa no próximo turno. Leia base e expoente antes de agir.',
-    'O tempo apertou, mas a regra ainda está ao seu favor. Respire e tente de novo.',
-  ],
+  timeout: {
+    multiplication: 'O tempo apertou. Na próxima, confirme bases iguais e some os expoentes.',
+    division: 'O tempo apertou. Em divisão com bases iguais, subtraia os expoentes.',
+    powerOfPower: 'O tempo apertou. Potência de potência multiplica os expoentes.',
+    zeroExponent: 'O tempo apertou. Expoente zero leva a base não nula para 1.',
+    negative: 'O tempo apertou. Expoente negativo pede o inverso da potência.',
+    complex: 'O tempo apertou. Quebre a expressão em partes antes de responder.',
+  },
   lowHp: [
     'Atenção ao HP. Use uma poção se precisar ganhar fôlego.',
     'Você ainda pode virar isso. Calma, observe a propriedade e escolha com cuidado.',
@@ -84,7 +88,7 @@ export function getProfessorMessage(input: ProfessorMessageInput): ProfessorMess
   }
   if (input.playerHp !== undefined && input.playerHp <= 25) return choose('warning', messageBanks.lowHp, input.previousText);
   if (input.eventTypes.includes('ITEM_USED')) return choose('neutral', messageBanks.item, input.previousText);
-  if (input.eventTypes.includes('TIMEOUT')) return choose('coach', messageBanks.timeout, input.previousText);
+  if (input.eventTypes.includes('TIMEOUT')) return { tone: 'coach', text: messageBanks.timeout[input.property] };
   if (input.eventTypes.includes('ANSWER_WRONG')) {
     return choose('coach', [`Quase! ${professorTipsByProperty[input.property]}`, 'Errar faz parte. Releia a expressão e resolva por etapas.'], input.previousText);
   }
